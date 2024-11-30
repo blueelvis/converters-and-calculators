@@ -11,7 +11,6 @@ terraform {
     storage_account_name = "pranavtfremotestate"
     container_name       = "tfstate"
     key                 = "xirr.terraform.tfstate"
-    use_oidc            = true
   }
 }
 
