@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio XIRR Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #addRow {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #calculate {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .header {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .remove-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .remove-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .help-text {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Portfolio XIRR Calculator</h1>
+
+        <div class="help-text">
+            <p>How to use this XIRR (Extended Internal Rate of Return) calculator:</p>
+            <ol>
+                <li>Enter negative amounts (-) for investments made (money going out)</li>
+                <li>Enter positive amounts (+) for returns received (money coming in)</li>
+                <li>Select the corresponding dates for each cash flow</li>
+                <li>Add more rows if needed using the "Add Row" button</li>
+                <li>Click "Calculate" to get the XIRR value</li>
+            </ol>
+            <p><strong>Note:</strong>
+            <ul>
+                <li>You need at least one negative (investment) and one positive (return) cash flow</li>
+                <li>Dates must be in chronological order</li>
+                <li>This calculator uses the same algorithm as Excel's XIRR function</li>
+                <li>All entered data is saved automatically in your browser</li>
+            </ul>
+            </p>
+            <p><strong>Example:</strong><br>
+                Investment: -1000 on 2023-01-01<br>
+                Return: 1200 on 2024-01-01<br>
+                XIRR Result: 20.00%
+            </p>
+        </div>
+
+        <div class="header">
+            <div>Amount (+ for inflow, - for outflow)</div>
+            <div>Date</div>
+            <div></div>
+        </div>
+
+        <div id="inputRows">
+            <!-- Rows will be added here -->
+        </div>
+
+        <div class="buttons">
+            <button id="addRow">Add Row</button>
+            <button id="calculate">Calculate XIRR</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Function to save data to localStorage
+        function saveToLocalStorage() {
+            const rows = [...document.getElementsByClassName('input-row')].map(row => ({
+                amount: row.querySelector('.amount').value,
+                date: row.querySelector('.date').value
+            }));
+            localStorage.setItem('xirrData', JSON.stringify(rows));
+        }
+
+        // Function to load data from localStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('xirrData');
+            if (savedData) {
+                const rows = JSON.parse(savedData);
+                // Clear existing rows
+                const container = document.getElementById('inputRows');
+                container.innerHTML = '';
+
+                // Add rows with saved data
+                rows.forEach(rowData => {
+                    const row = document.createElement('div');
+                    row.className = 'input-row';
+                    row.innerHTML = `
+                        <input type="number" class="amount" placeholder="Enter amount" value="${rowData.amount}">
+                        <input type="date" class="date" value="${rowData.date}">
+                        <button class="remove-btn" onclick="removeRow(this)">✕</button>
+                    `;
+                    container.appendChild(row);
+                });
+            } else {
+                // If no saved data, add default rows
+                for (let i = 0; i < 10; i++) {
+                    addRow();
+                }
+            }
+        }
+
+        function addRow() {
+            const container = document.getElementById('inputRows');
+            const row = document.createElement('div');
+            row.className = 'input-row';
+            row.innerHTML = `
+                <input type="number" class="amount" placeholder="Enter amount">
+                <input type="date" class="date">
+                <button class="remove-btn" onclick="removeRow(this)">✕</button>
+            `;
+            container.appendChild(row);
+            // Save after adding new row
+            saveToLocalStorage();
+        }
+
+        function removeRow(button) {
+            const row = button.parentElement;
+            const container = row.parentElement;
+
+            if (container.children.length > 1) {
+                row.remove();
+            } else {
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => input.value = '');
+            }
+            // Save after removing row
+            saveToLocalStorage();
+        }
+
+        // Load saved data when page loads
+        document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
+
+        // Add event listeners for input changes
+        document.getElementById('inputRows').addEventListener('change', (e) => {
+            if (e.target.matches('.amount') || e.target.matches('.date')) {
+                saveToLocalStorage();
+            }
+        });
+
+        document.getElementById('addRow').addEventListener('click', addRow);
+
+        function calculateXIRR(cashflows, dates) {
+            function npv(rate) {
+                let sum = 0;
+                const firstDate = dates[0];
+
+                for (let i = 0; i < cashflows.length; i++) {
+                    const daysDiff = (dates[i] - firstDate) / (1000 * 60 * 60 * 24);
+                    sum += cashflows[i] / Math.pow(1 + rate, daysDiff / 365);
+                }
+                return sum;
+            }
+
+            function derivativeNPV(rate) {
+                let sum = 0;
+                const firstDate = dates[0];
+
+                for (let i = 0; i < cashflows.length; i++) {
+                    const daysDiff = (dates[i] - firstDate) / (1000 * 60 * 60 * 24);
+                    const exp = daysDiff / 365;
+                    sum += (-exp * cashflows[i]) / Math.pow(1 + rate, exp + 1);
+                }
+                return sum;
+            }
+
+            let rate = 0.1; // Initial guess
+            const maxIterations = 100;
+            const tolerance = 0.0000001;
+
+            // Newton-Raphson method
+            for (let i = 0; i < maxIterations; i++) {
+                const currentNPV = npv(rate);
+
+                if (Math.abs(currentNPV) < tolerance) {
+                    return rate;
+                }
+
+                const derivative = derivativeNPV(rate);
+
+                if (derivative === 0) {
+                    return null;
+                }
+
+                rate = rate - currentNPV / derivative;
+
+                if (rate <= -1) {
+                    rate = -0.999999;
+                }
+
+                if (isNaN(rate)) {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        document.getElementById('calculate').addEventListener('click', () => {
+            const rows = document.getElementsByClassName('input-row');
+            let cashflows = [];
+            let dates = [];
+
+            // Collect valid inputs
+            for (let row of rows) {
+                const amount = parseFloat(row.querySelector('.amount').value);
+                const date = row.querySelector('.date').value;
+
+                if (!isNaN(amount) && date) {
+                    cashflows.push(amount);
+                    dates.push(new Date(date));
+                }
+            }
+
+            if (cashflows.length < 2) {
+                document.getElementById('result').textContent =
+                    'Please enter at least two valid cash flows';
+                return;
+            }
+
+            // Check for both positive and negative cash flows
+            const hasPositive = cashflows.some(cf => cf > 0);
+            const hasNegative = cashflows.some(cf => cf < 0);
+
+            if (!hasPositive || !hasNegative) {
+                document.getElementById('result').textContent =
+                    'Need both positive and negative cash flows';
+                return;
+            }
+
+            try {
+                const xirr = calculateXIRR(cashflows, dates);
+                if (xirr === null) {
+                    document.getElementById('result').textContent =
+                        'Could not calculate XIRR. Please check your inputs.';
+                } else {
+                    const xirrPercentage = (xirr * 100).toFixed(2);
+                    document.getElementById('result').textContent = `XIRR: ${xirrPercentage}%`;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('result').textContent =
+                    'Error calculating XIRR. Please check your inputs.';
+            }
+        });
+    </script>
+</body>
+
+</html>
