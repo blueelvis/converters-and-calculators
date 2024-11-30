@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Beautifier</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #beautify {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        #minify {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #copy {
+            background-color: #757575;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .help-text {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>JSON Beautifier</h1>
+
+        <div class="help-text">
+            <p>How to use this JSON Beautifier:</p>
+            <ol>
+                <li>Paste your JSON in the input area</li>
+                <li>Click "Beautify" to format with proper indentation</li>
+                <li>Click "Minify" to compress the JSON</li>
+                <li>Use "Copy" to copy the result to clipboard</li>
+            </ol>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Validates JSON syntax</li>
+                <li>Preserves data types</li>
+                <li>2-space indentation</li>
+                <li>Auto-saves your last input</li>
+            </ul>
+        </div>
+
+        <textarea id="input" placeholder="Paste your JSON here..."></textarea>
+
+        <div class="buttons">
+            <button id="beautify">Beautify</button>
+            <button id="minify">Minify</button>
+            <button id="copy">Copy</button>
+        </div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const input = document.getElementById('input');
+        const message = document.getElementById('message');
+
+        // Load saved content
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedContent = localStorage.getItem('jsonContent');
+            if (savedContent) {
+                input.value = savedContent;
+            }
+        });
+
+        // Save content on change
+        input.addEventListener('input', () => {
+            localStorage.setItem('jsonContent', input.value);
+        });
+
+        function showMessage(text, isError = false) {
+            message.textContent = text;
+            message.className = isError ? 'error' : 'success';
+            setTimeout(() => {
+                message.textContent = '';
+                message.className = '';
+            }, 3000);
+        }
+
+        function beautifyJSON() {
+            try {
+                const obj = JSON.parse(input.value);
+                input.value = JSON.stringify(obj, null, 2);
+                showMessage('JSON beautified successfully!');
+            } catch (e) {
+                showMessage('Invalid JSON format!', true);
+            }
+        }
+
+        function minifyJSON() {
+            try {
+                const obj = JSON.parse(input.value);
+                input.value = JSON.stringify(obj);
+                showMessage('JSON minified successfully!');
+            } catch (e) {
+                showMessage('Invalid JSON format!', true);
+            }
+        }
+
+        async function copyToClipboard() {
+            try {
+                await navigator.clipboard.writeText(input.value);
+                showMessage('Copied to clipboard!');
+            } catch (e) {
+                showMessage('Failed to copy!', true);
+            }
+        }
+
+        document.getElementById('beautify').addEventListener('click', beautifyJSON);
+        document.getElementById('minify').addEventListener('click', minifyJSON);
+        document.getElementById('copy').addEventListener('click', copyToClipboard);
+
+        // Handle paste with Ctrl+V
+        input.addEventListener('paste', (e) => {
+            // Small delay to let the paste complete
+            setTimeout(beautifyJSON, 0);
+        });
+    </script>
+</body>
+
+</html> 
