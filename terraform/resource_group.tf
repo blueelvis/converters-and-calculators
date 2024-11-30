@@ -1,8 +1,13 @@
-resource "azurerm_resource_group" "main" {
-  name     = "calculators-and-converters"
-  location = "Central India"  # Change this to your preferred region
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
 
-  tags = {
-    environment = "production"
+  lifecycle {
+    prevent_destroy = true
   }
+}
+
+import {
+  to = azurerm_resource_group.rg
+  id = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${var.resource_group_name}"
 }
