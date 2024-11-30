@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0"
+      version = "~> 4.0"
     }
   }
 
@@ -11,10 +11,13 @@ terraform {
     storage_account_name = "pranavtfremotestate"
     container_name       = "tfstate"
     key                 = "xirr.terraform.tfstate"
+    use_oidc            = true
+    use_azuread_auth    = true
   }
 }
 
 provider "azurerm" {
-  skip_provider_registration = true
   features {}
+  use_oidc = true
+  skip_provider_registration = true
 }
