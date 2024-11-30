@@ -13,7 +13,6 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +31,7 @@ jobs:
       # Deploy backend infrastructure
       - name: Terraform Init Backend
         run: terraform init
-        working-directory: ./terraform/backend
+        working-directory: ./terraform
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -41,7 +40,7 @@ jobs:
 
       - name: Terraform Apply Backend
         run: terraform apply -auto-approve
-        working-directory: ./terraform/backend
+        working-directory: ./terraform
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
