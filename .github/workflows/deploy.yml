@@ -28,25 +28,6 @@ jobs:
         with:
           terraform_version: "1.7.0"
 
-      # Deploy backend infrastructure
-      - name: Terraform Init Backend
-        run: terraform init
-        working-directory: ./terraform
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Terraform Apply Backend
-        run: terraform apply -auto-approve
-        working-directory: ./terraform
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
       # Deploy main infrastructure
       - name: Terraform Init
         run: terraform init
@@ -65,8 +46,6 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_resource_group_name: ${{ vars.RESOURCE_GROUP_NAME }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
