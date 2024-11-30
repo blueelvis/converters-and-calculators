@@ -1,0 +1,61 @@
+name: Deploy Static Website
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ./terraform
+        env:
+          TF_VAR_environment: "prod"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
+        env:
+          TF_VAR_environment: "prod"
+
+      - name: Get Storage Account Name
+        id: storage
+        run: |
+          STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
+          echo "storage_account=$STORAGE_ACCOUNT" >> $GITHUB_OUTPUT
+        working-directory: ./terraform
+
+      - name: Upload HTML files
+        run: |
+          az storage blob upload-batch \
+            --account-name ${{ steps.storage.outputs.storage_account }} \
+            --auth-mode login \
+            --source ./html \
+            --destination '$web' \
+            --overwrite true
